@@ -1,15 +1,28 @@
-<script setup>
+<script>
 import { RouterLink, RouterView } from 'vue-router'
+
+
+export default {
+  mounted() {
+  },
+  data() {
+    return {}
+  },
+  computed: {
+  },
+  methods: {
+  }
+}
 </script>
 
 <template>
-  <header>
-    <nav class="ui two item menu">
-      <RouterLink class="item" to="/">Home</RouterLink>
-      <RouterLink class="item" to="/about">About</RouterLink>
-    </nav>
-  </header>
-  <RouterView />
+  <div class="ui visible inverted left vertical sidebar menu">
+    <RouterLink class="item" to="/">Home</RouterLink>
+    <RouterLink class="item" to="/about">About</RouterLink>
+  </div>
+  <div class="pusher">
+    <RouterView />
+  </div>
 </template>
 
 <style scoped>
