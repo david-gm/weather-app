@@ -1,5 +1,6 @@
 package com.dg.weatherapp.api;
 
+import com.dg.weatherapp.api.monthly.MonthlyDataTransferObject;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
@@ -14,7 +15,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.io.IOException;
 import java.util.*;
 
-import com.dg.weatherapp.api.monthly.MonthlyData;
+import com.dg.weatherapp.api.monthly.Monthly;
 
 @RestController()
 @RequestMapping("/api")
@@ -39,31 +40,15 @@ public class APIController {
         return "test";
     }
 
-    @GetMapping(value = "/external")
-    public Map<String, Object> testExternalAPI() {
-        RestTemplate restTemplate = new RestTemplate();
-        try {
-            String result = restTemplate.getForObject(BASE_URL + "datasets", String.class);
-            ObjectMapper objectMapper = new ObjectMapper();
-            if (result != null)
-                return objectMapper.readValue(result.getBytes(), new TypeReference<>() {
-                });
-            else
-                return new HashMap<>();
-        } catch (IOException e) {
-            throw new ResponseStatusException(
-                    HttpStatus.NOT_FOUND, "Foo Not Found", e);
-        }
-    }
-
     @GetMapping(value = "/monthly/{id}")
-    public ResponseEntity<MonthlyData> getMonthlyData(@PathVariable Long id) {
+    public ResponseEntity<MonthlyDataTransferObject> getMonthlyData(@PathVariable Long id) {
         try {
-            Optional<MonthlyData> monthlyData = weatherAppService.getMonthlyDataById(id);
+            Optional<Monthly> monthlyData = weatherAppService.getMonthlyById(id);
             if (monthlyData.isPresent()) {
-                return new ResponseEntity<MonthlyData>(monthlyData.get(), HttpStatus.OK);
+                MonthlyDataTransferObject mdto = weatherAppService.mapMonthly(monthlyData.get());
+                return new ResponseEntity<MonthlyDataTransferObject>(mdto, HttpStatus.OK);
             } else {
-                return new ResponseEntity<MonthlyData>(HttpStatus.NOT_FOUND);
+                return new ResponseEntity<MonthlyDataTransferObject>(HttpStatus.NOT_FOUND);
             }
         } catch (Exception e) {
             throw new ResponseStatusException(
@@ -76,10 +61,10 @@ public class APIController {
         double[] coordinates = {47.10778, 15.42694}; // Prochaskagasse 31
 
         try {
-            MonthlyData monthlyData = weatherAppService.createMonthlyData(coordinates);
-            if (monthlyData != null) {
-                MonthlyData monthlyDataSaved = weatherAppService.save(monthlyData);
-                if (monthlyDataSaved == null)
+            Monthly monthly = weatherAppService.createMonthlyData(coordinates);
+            if (monthly != null) {
+                Monthly monthlySaved = weatherAppService.save(monthly);
+                if (monthlySaved == null)
                     throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Location already stored in DB");
                 return new ResponseEntity<>(HttpStatus.OK);
             }

@@ -1,5 +1,6 @@
 package com.dg.weatherapp.api.monthly;
 
+import com.dg.weatherapp.api.location.Location;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -10,17 +11,21 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
+@Table
 @NoArgsConstructor
 @AllArgsConstructor
-@Setter
 @Getter
-public class MonthlyData {
+@Setter
+public class Monthly {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    private Double temperature; // Degree Celsius
-    private Double precipitation; // kg m-2
-    private LocalDateTime datetime;
+    @ElementCollection
+    @OneToMany(cascade = CascadeType.PERSIST)
+    private List<MonthlyData> monthlyData;
+
+    @OneToOne
+    private Location location;
 }

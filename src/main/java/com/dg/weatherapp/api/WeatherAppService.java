@@ -1,7 +1,11 @@
 package com.dg.weatherapp.api;
 
+import com.dg.weatherapp.api.location.Location;
+import com.dg.weatherapp.api.location.LocationRepository;
+import com.dg.weatherapp.api.monthly.Monthly;
 import com.dg.weatherapp.api.monthly.MonthlyData;
-import com.dg.weatherapp.api.monthly.MonthlyDataRepository;
+import com.dg.weatherapp.api.monthly.MonthlyDataTransferObject;
+import com.dg.weatherapp.api.monthly.MonthlyRepository;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -13,10 +17,8 @@ import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -27,26 +29,29 @@ public class WeatherAppService {
     private final ObjectReader readerDouble;
     private final ObjectReader readerString;
 
-    private final MonthlyDataRepository monthlyDataRepository;
+    private final LocationRepository locationRepository;
+    private final MonthlyRepository monthlyRepository;
 
-    WeatherAppService(MonthlyDataRepository monthlyDataRepository) {
+
+    WeatherAppService(LocationRepository locationRepository, MonthlyRepository monthlyRepository) {
         this.objectMapper = new ObjectMapper();
         this.readerDouble = objectMapper.readerFor(new TypeReference<List<Double>>() {
         });
         this.readerString = objectMapper.readerFor(new TypeReference<List<String>>() {
         });
-        this.monthlyDataRepository = monthlyDataRepository;
+        this.locationRepository = locationRepository;
+        this.monthlyRepository = monthlyRepository;
     }
 
-    public MonthlyData save(MonthlyData monthlyData) {
-        List<MonthlyData> results = monthlyDataRepository.findByLatitudeAndLongitude(monthlyData.getLatitude(), monthlyData.getLongitude());
-        if(results.isEmpty()) {
-            return monthlyDataRepository.save(monthlyData);
-        }
-        return null;
+    public Monthly save(Monthly monthlyData) {
+//        List<Monthly> results = monthlyDataRepository.findByLatitudeAndLongitude(monthlyData.getLatitude(), monthlyData.getLongitude());
+//        if(results.isEmpty()) {
+            return monthlyRepository.save(monthlyData);
+//        }
+//        return null;
     }
 
-    public MonthlyData createMonthlyData(double[] coordinates) throws IOException {
+    public Monthly createMonthlyData(double[] coordinates) throws IOException {
         RestTemplate restTemplate = new RestTemplate();
         Locale locale = LocaleContextHolder.getLocale();
         String latLon = String.format(locale, "%f,%f", coordinates[0], coordinates[1]);
@@ -57,17 +62,31 @@ public class WeatherAppService {
         String result = restTemplate.getForObject(url, String.class);
 
         if (result != null) {
-            return createMonthlyDataFromString(result);
+            JsonNode mapJson = objectMapper.readTree(result);
+            Location location = createLocationFromString(mapJson);
+            List <Location> locFound = locationRepository.findByLatitudeAndLongitude(location.getLatitude(), location.getLongitude());
+
+            if(locFound.isEmpty())
+                locationRepository.save(location);
+            else
+                return null;
+            return createMonthlyFromString(mapJson, location);
         }
         return null;
     }
 
-    private MonthlyData createMonthlyDataFromString(String jsonString) throws IOException {
-        JsonNode mapJson = objectMapper.readTree(jsonString);
-
+    private Location createLocationFromString(JsonNode mapJson) throws IOException {
         JsonNode jsonLocation = mapJson.get("features").get(0).get("geometry").get("coordinates");
-        ArrayList<Double> location = readerDouble.readValue(jsonLocation);
+        ArrayList<Double> locationArray = readerDouble.readValue(jsonLocation);
 
+        Location location = new Location();
+        location.setLatitude(locationArray.get(0));
+        location.setLongitude(locationArray.get(1));
+
+        return location;
+    }
+
+    private Monthly createMonthlyFromString(JsonNode mapJson, Location location) throws IOException {
         JsonNode jsonTemp = mapJson.get("features").get(0).get("properties").get("parameters").get("Tm").get("data");
         ArrayList<Double> temperature = readerDouble.readValue(jsonTemp);
 
@@ -82,17 +101,37 @@ public class WeatherAppService {
             datetimes_.add(dateTime);
         }
 
-        MonthlyData monthlyData = new MonthlyData();
-        monthlyData.setLatitude(location.get(0));
-        monthlyData.setLongitude(location.get(1));
-        monthlyData.setTemperature(temperature);
-        monthlyData.setPrecipitation(percipitation);
-        monthlyData.setDatetime(datetimes_);
+        ArrayList<MonthlyData> monthlyDataList = new ArrayList<>();
+        for (int i = 0; i < temperature.size(); i++) {
+            MonthlyData monthlyData = new MonthlyData();
+            monthlyData.setTemperature(temperature.get(i));
+            monthlyData.setPrecipitation(percipitation.get(i));
+            monthlyData.setDatetime(datetimes_.get(i));
 
-        return monthlyData;
+
+            monthlyDataList.add(monthlyData);
+        }
+
+        Monthly monthly = new Monthly();
+        monthly.setMonthlyData(monthlyDataList);
+        monthly.setLocation(location);
+
+        return monthly;
     }
 
-    public Optional<MonthlyData> getMonthlyDataById(Long id) {
-        return monthlyDataRepository.findById(id);
+    public Optional<Monthly> getMonthlyById(Long id) {
+        return monthlyRepository.findById(id);
+    }
+
+    public MonthlyDataTransferObject mapMonthly(Monthly monthly)
+    {
+        MonthlyDataTransferObject mdtro = new MonthlyDataTransferObject();
+        mdtro.setId(monthly.getId());
+        mdtro.setLocation(monthly.getLocation());
+
+        mdtro.setDatetime(monthly.getMonthlyData().stream().map(MonthlyData::getDatetime).collect(Collectors.toList()));
+        mdtro.setTemperature(monthly.getMonthlyData().stream().map(MonthlyData::getTemperature).collect(Collectors.toList()));
+        mdtro.setPrecipitation(monthly.getMonthlyData().stream().map(MonthlyData::getPrecipitation).collect(Collectors.toList()));
+        return mdtro;
     }
 }

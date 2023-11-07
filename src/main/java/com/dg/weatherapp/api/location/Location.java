@@ -1,26 +1,26 @@
-package com.dg.weatherapp.api.monthly;
+package com.dg.weatherapp.api.location;
 
+import com.dg.weatherapp.api.monthly.MonthlyData;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
-@NoArgsConstructor
-@AllArgsConstructor
+@Table
 @Setter
 @Getter
-public class MonthlyData {
+@NoArgsConstructor
+@AllArgsConstructor
+public class Location {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    private Double temperature; // Degree Celsius
-    private Double precipitation; // kg m-2
-    private LocalDateTime datetime;
+    private Double latitude;
+    private Double longitude;
 }
