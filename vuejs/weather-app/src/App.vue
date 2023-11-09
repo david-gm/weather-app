@@ -17,7 +17,8 @@ export default {
 
 <template>
   <div class="ui visible inverted left vertical sidebar menu">
-    <RouterLink class="item" to="/">Home</RouterLink>
+    <RouterLink class="item" to="/">Map</RouterLink>
+    <RouterLink class="item" to="/data">Data</RouterLink>
     <RouterLink class="item" to="/about">About</RouterLink>
   </div>
   <div class="pusher">

@@ -21,7 +21,7 @@ class Message {
   static errorAxios(error) {
     let msg = error.message
 
-    if (error.response.data.message) msg += ' <br>Cause: ' + error.response.data.message
+    if (error.response && error.response.data.message) msg += ' <br>Cause: ' + error.response.data.message
     iziToast.error({
       title: 'Error',
       position: 'center',
