@@ -1,20 +1,19 @@
 package com.dg.weatherapp.api;
 
+import com.dg.weatherapp.api.location.LocationService;
 import com.dg.weatherapp.api.monthly.MonthlyDataTransferObject;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.util.*;
 
+import com.dg.weatherapp.api.location.Location;
 import com.dg.weatherapp.api.monthly.Monthly;
 
 @RestController()
@@ -25,9 +24,11 @@ public class APIController {
     private static final Logger LOG = LoggerFactory.getLogger(APIController.class);
     private static final String BASE_URL = "https://dataset.api.hub.geosphere.at/v1/";
     private final WeatherAppService weatherAppService;
+    private final LocationService locationService;
 
-    APIController(WeatherAppService weatherAppService) {
+    APIController(WeatherAppService weatherAppService, LocationService locationService) {
         this.weatherAppService = weatherAppService;
+        this.locationService = locationService;
     }
 
     @PostConstruct
@@ -35,9 +36,9 @@ public class APIController {
         LOG.debug(String.format("This is a test message from the %s", APIController.class));
     }
 
-    @GetMapping("/")
-    public String index() {
-        return "test";
+    @PostMapping("/location")
+    Location createLocation(@RequestBody Location newLocation) {
+        return locationService.saveNewLocation(newLocation);
     }
 
     @GetMapping(value = "/monthly/{id}")
