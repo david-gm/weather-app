@@ -80,8 +80,8 @@ public class WeatherAppService {
         ArrayList<Double> locationArray = readerDouble.readValue(jsonLocation);
 
         Location location = new Location();
-        location.setLatitude(locationArray.get(0));
-        location.setLongitude(locationArray.get(1));
+        location.setLatitude(locationArray.get(1));
+        location.setLongitude(locationArray.get(0));
 
         return location;
     }
