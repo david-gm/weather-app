@@ -14,6 +14,9 @@ public class LocationService {
         this.locationRepository = locationRepository;
     }
 
+    public List<Location> getLocations(){
+        return locationRepository.findAll();
+    }
     public Location saveNewLocation(Location newLocation) {
         List<Location> locationsFound = locationRepository.findByLatitudeAndLongitude(newLocation.getLatitude(), newLocation.getLongitude());
         if(locationsFound.isEmpty())

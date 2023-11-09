@@ -36,6 +36,11 @@ public class APIController {
         LOG.debug(String.format("This is a test message from the %s", APIController.class));
     }
 
+    @GetMapping("/locations")
+    public ResponseEntity<List<Location>> getLocations() {
+        return new ResponseEntity<List<Location>>(locationService.getLocations(), HttpStatus.OK);
+    }
+
     @PostMapping("/location")
     Location createLocation(@RequestBody Location newLocation) {
         return locationService.saveNewLocation(newLocation);
