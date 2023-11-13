@@ -82,12 +82,8 @@ export default {
 </script>
 
 <style scoped>
-.plot {
-    max-width: 80%;
-}
 
 .my-loader {
-    max-width: 80%;
     min-height: 100px;
 }
 </style>

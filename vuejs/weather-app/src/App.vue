@@ -21,7 +21,7 @@ export default {
     <RouterLink class="item" to="/data">Data</RouterLink>
     <RouterLink class="item" to="/about">About</RouterLink>
   </div>
-  <div class="pusher">
+  <div class="pusher fix-sidebar-padding">
     <RouterView />
   </div>
 </template>
@@ -29,5 +29,9 @@ export default {
 <style scoped>
 .ui.menu {
   margin-bottom: 2em;
+}
+
+.fix-sidebar-padding {
+    padding-right: 260px;
 }
 </style>

@@ -10,9 +10,11 @@
     "format": "prettier --write src/"
   },
   "dependencies": {
+    "@geoapify/leaflet-address-search-plugin": "^1.0.2",
     "axios": "^1.6.0",
     "izitoast": "^1.4.0",
     "leaflet": "^1.9.4",
+    "leaflet-extra-markers": "^1.2.2",
     "pinia": "^2.1.7",
     "plotly": "^1.0.6",
     "plotly.js-dist": "^2.27.0",
