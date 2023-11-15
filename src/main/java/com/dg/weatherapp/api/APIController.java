@@ -1,6 +1,7 @@
 package com.dg.weatherapp.api;
 
 import com.dg.weatherapp.api.location.LocationService;
+import com.dg.weatherapp.api.location.exceptions.LocationNotFoundException;
 import com.dg.weatherapp.api.monthly.MonthlyDataTransferObject;
 import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
@@ -62,12 +63,14 @@ public class APIController {
         }
     }
 
-    @PostMapping(value = "/monthly")
-    public ResponseEntity<?> storeMonthlyData() {
-        double[] coordinates = {47.10778, 15.42694}; // Prochaskagasse 31
+    @PostMapping(value = "/monthly/{id}")
+    public ResponseEntity<?> storeMonthlyData(@PathVariable("id") Long id) {
 
         try {
-            Monthly monthly = weatherAppService.createMonthlyData(coordinates);
+            Optional<Location> location = locationService.getLocation(id);
+            if (location.isEmpty())
+                throw new LocationNotFoundException(id);
+            Monthly monthly = weatherAppService.createMonthlyData(location.get());
             if (monthly != null) {
                 Monthly monthlySaved = weatherAppService.save(monthly);
                 if (monthlySaved == null)

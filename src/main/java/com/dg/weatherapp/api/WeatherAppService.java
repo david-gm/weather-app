@@ -16,7 +16,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -24,6 +26,9 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 public class WeatherAppService {
+
+
+    final static DateTimeFormatter CUSTOM_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     private final ObjectMapper objectMapper;
     private final ObjectReader readerDouble;
@@ -44,35 +49,33 @@ public class WeatherAppService {
     }
 
     public Monthly save(Monthly monthlyData) {
-//        List<Monthly> results = monthlyDataRepository.findByLatitudeAndLongitude(monthlyData.getLatitude(), monthlyData.getLongitude());
-//        if(results.isEmpty()) {
-            return monthlyRepository.save(monthlyData);
-//        }
-//        return null;
+        return monthlyRepository.save(monthlyData);
     }
 
-    public Monthly createMonthlyData(double[] coordinates) throws IOException {
+    public Monthly createMonthlyData(Location requestedLocation) throws IOException {
         RestTemplate restTemplate = new RestTemplate();
         Locale locale = LocaleContextHolder.getLocale();
-        String latLon = String.format(locale, "%f,%f", coordinates[0], coordinates[1]);
-        String url = String.format("%s?parameters=Tm&parameters=RR&start=1961-01-01T00:00&end=2023-10-28T00:00&lat_lon=%s&output_format=geojson",
-                GeosphereURLs.URL_MONTHLY_1KM, latLon
+        String latLon = String.format(locale, "%f,%f", requestedLocation.getLatitude(), requestedLocation.getLongitude());
+
+        String url = String.format("%s?parameters=Tm&parameters=RR&start=1961-01-01T00:00&end=%s&lat_lon=%s&output_format=geojson",
+                GeosphereURLs.URL_MONTHLY_1KM, getDateTimeYesterday(), latLon
         );
 
         String result = restTemplate.getForObject(url, String.class);
 
         if (result != null) {
             JsonNode mapJson = objectMapper.readTree(result);
-            Location location = createLocationFromString(mapJson);
-            List <Location> locFound = locationRepository.findByLatitudeAndLongitude(location.getLatitude(), location.getLongitude());
+            Location mappedLocation = createLocationFromString(mapJson);
 
-            if(locFound.isEmpty())
-                locationRepository.save(location);
-            else
-                return null;
-            return createMonthlyFromString(mapJson, location);
+            return createMonthlyFromString(mapJson, requestedLocation, mappedLocation);
         }
         return null;
+    }
+
+    private static String getDateTimeYesterday() {
+        LocalDateTime dtNow = java.time.LocalDateTime.now();
+        LocalDateTime dtYesterday = dtNow.minusDays(1);
+        return dtYesterday.format(CUSTOM_FORMATTER) + "T23:59";
     }
 
     private Location createLocationFromString(JsonNode mapJson) throws IOException {
@@ -86,7 +89,7 @@ public class WeatherAppService {
         return location;
     }
 
-    private Monthly createMonthlyFromString(JsonNode mapJson, Location location) throws IOException {
+    private Monthly createMonthlyFromString(JsonNode mapJson, Location requestedlocation, Location mappedLocation) throws IOException {
         JsonNode jsonTemp = mapJson.get("features").get(0).get("properties").get("parameters").get("Tm").get("data");
         ArrayList<Double> temperature = readerDouble.readValue(jsonTemp);
 
@@ -114,7 +117,9 @@ public class WeatherAppService {
 
         Monthly monthly = new Monthly();
         monthly.setMonthlyData(monthlyDataList);
-        monthly.setLocation(location);
+        monthly.setLocation(requestedlocation);
+        monthly.setMappedLatitude(mappedLocation.getLatitude());
+        monthly.setMappedLongitude(mappedLocation.getLongitude());
 
         return monthly;
     }
@@ -123,8 +128,7 @@ public class WeatherAppService {
         return monthlyRepository.findById(id);
     }
 
-    public MonthlyDataTransferObject mapMonthly(Monthly monthly)
-    {
+    public MonthlyDataTransferObject mapMonthly(Monthly monthly) {
         MonthlyDataTransferObject mdtro = new MonthlyDataTransferObject();
         mdtro.setId(monthly.getId());
         mdtro.setLocation(monthly.getLocation());

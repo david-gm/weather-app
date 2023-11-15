@@ -28,4 +28,7 @@ public class Monthly {
 
     @OneToOne
     private Location location;
+
+    private Double mappedLatitude;
+    private Double mappedLongitude;
 }

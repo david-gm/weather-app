@@ -4,6 +4,7 @@ import com.dg.weatherapp.api.location.exceptions.LocationDuplicateException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class LocationService {
@@ -23,5 +24,9 @@ public class LocationService {
             return locationRepository.save(newLocation);
         else
             throw new LocationDuplicateException(newLocation);
+    }
+
+    public Optional<Location> getLocation(Long id) {
+        return locationRepository.findById(id);
     }
 }
