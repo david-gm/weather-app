@@ -4,7 +4,6 @@ import LocationMap from '../components/LocationMap.vue';
 
 <template>
     <div class="container-margin">
-        <h2 class="ui header">Map</h2>
         <LocationMap></LocationMap>
     </div>
 </template>

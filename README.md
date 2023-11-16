@@ -26,5 +26,3 @@ List schema of table:
 ```
 \d <table name>
 ```
-
-
