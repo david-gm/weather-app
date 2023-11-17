@@ -15,6 +15,12 @@ import MonthlyData from '../components/MonthlyData.vue';
   </div>
 </template>
 
+<script>
+export default {
+  name: 'DataView',
+}
+</script>
+
 <style scoped>
 .container-margin {
   margin-top: 1em;

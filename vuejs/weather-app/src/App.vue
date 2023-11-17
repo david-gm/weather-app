@@ -11,6 +11,13 @@ export default {
   computed: {
   },
   methods: {
+  },
+  watch: {
+    async $route(to, from) {
+      if(to.path == "/data") {
+        await this.$store.dispatch('fetchLocations');
+      }
+    }
   }
 }
 </script>
@@ -32,6 +39,6 @@ export default {
 }
 
 .fix-sidebar-padding {
-    padding-right: 260px;
+  padding-right: 260px;
 }
 </style>
