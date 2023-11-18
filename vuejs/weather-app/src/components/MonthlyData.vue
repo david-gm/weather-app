@@ -5,13 +5,56 @@
         <div class="ui grid">
             <div class="row">
                 <div class="column">
-                    <select name="gender" class="ui dropdown" id="select" v-model="selectedLocationsId">
-                        <option value="">Choose Location</option>
-                        <option v-for="loc in locations" :value="loc.id">{{ loc.address }}</option>
-                    </select>
+                    <SuiCard fluid title="Filter">
+                        <div class="ui form">
+                            <div class="three fields">
+                                <div class="field">
+                                    <label>Location</label>
+                                    <select name="locations" class="ui dropdown" id="select-location"
+                                        v-model="selectedLocationsId">
+                                        <option value="">Choose Location</option>
+                                        <option v-for="loc in locations" :value="loc.id">{{ loc.address }}</option>
+                                    </select>
+                                </div>
+                                <div class="field">
+                                    <label>From</label>
+                                    <div class="two fields">
+                                        <div class="field">
+                                            <select name="year" class="ui dropdown" id="select-year-start" v-model="selectedYearStart">
+                                                <option v-for="year in availableYears" :value="year">{{ year }}</option>
+                                            </select>
+                                        </div>
+                                        <div class="field">
+                                            <select name="month" class="ui dropdown" id="select-month-start"
+                                                v-model="selectedMonthStart">
+                                                <option v-for="month in availableMonths" :value="month.value">{{ month.name
+                                                }}</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label>To</label>
+                                    <div class="two fields">
+                                        <div class="field">
+                                            <select name="year" class="ui dropdown" id="select-year-end" v-model="selectedYearEnd">
+                                                <option v-for="year in availableYears" :value="year">{{ year }}</option>
+                                            </select>
+                                        </div>
+                                        <div class="field">
+                                            <select name="month" class="ui dropdown" id="select-month-end"
+                                                v-model="selectedMonthEnd">
+                                                <option v-for="month in availableMonths" :value="month.value">{{ month.name
+                                                }}</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </SuiCard>
                 </div>
             </div>
-
             <div class="row">
                 <div class="column">
                     <input type="button" class="ui secondary button" :class="{ disabled: buttonsDisabled }"
@@ -37,30 +80,58 @@
 </template>
 
 <script>
-import axios from "axios";
+import axios from 'axios';
 import Plotly from 'plotly.js-dist';
 import { Message } from '../utils/Message';
 import { mapState } from 'vuex';
+import SuiCard from "./SuiCard.vue";
+import moment from 'moment';
 
 export default {
     name: "MonthlyData",
+    components: {
+        SuiCard
+    },
     data() {
         return {
             monthlyData: null,
             loading: false,
             monthlyDataPlotId: "monthly-data-plot-id",
-            selectedLocationsId: ""
+            selectedLocationsId: "",
+            startDate: "2061-01-01",
+            endDate: "2023-01-01",
+            selectedYearStart: 1961,
+            selectedMonthStart: 1,
+            selectedYearEnd: 2023,
+            selectedMonthEnd: 1
         }
     },
     computed: {
         ...mapState(['locations']),
         buttonsDisabled() {
             return this.selectedLocationsId == "";
+        },
+        availableYears() {
+            const firstYear = 1961;
+            const currentYear = new Date().getFullYear();
+            return Array.from({ length: currentYear - firstYear + 1 }, (_, i) => i + firstYear);
+        },
+        availableMonths() {
+            let months = [];
+            for (let i = 0; i < 12; i++) {
+                const monthString = moment().month(i).format('MMMM');
+                console.log(monthString);
+                months.push({ name: monthString, value: i + 1 });
+            }
+            return months;
         }
     },
     mounted() {
-        $('#select')
-            .dropdown();
+        $('#select-location').dropdown();
+        $('#select-year-start').dropdown();
+        $('#select-month-start').dropdown();
+        $('#select-year-end').dropdown();
+        $('#select-month-end').dropdown();
     },
     methods: {
         async createMonthlyData() {
@@ -84,6 +155,12 @@ export default {
                 return;
             }
             try {
+                const start = new Date(this.startDate);
+                const end = new Date(this.endDate);
+
+                console.log(start);
+                console.log(end);
+
                 this.setLoading();
                 const result = await axios.get(`http://localhost:8080/api/monthly/${this.selectedLocationsId}`);
 
@@ -128,5 +205,4 @@ export default {
 <style scoped>
 .my-loader {
     min-height: 100px;
-}
-</style>
+}</style>
