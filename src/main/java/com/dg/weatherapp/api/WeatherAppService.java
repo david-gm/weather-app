@@ -17,6 +17,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -128,7 +129,7 @@ public class WeatherAppService {
         return monthlyRepository.findById(id);
     }
 
-    public MonthlyDataTransferObject mapMonthly(Monthly monthly) {
+    public MonthlyDataTransferObject mapMonthly(Monthly monthly, LocalDate startDate, LocalDate endDate) {
         MonthlyDataTransferObject mdtro = new MonthlyDataTransferObject();
         mdtro.setId(monthly.getId());
         mdtro.setLocation(monthly.getLocation());
@@ -136,6 +137,9 @@ public class WeatherAppService {
         mdtro.setDatetime(monthly.getMonthlyData().stream().map(MonthlyData::getDatetime).collect(Collectors.toList()));
         mdtro.setTemperature(monthly.getMonthlyData().stream().map(MonthlyData::getTemperature).collect(Collectors.toList()));
         mdtro.setPrecipitation(monthly.getMonthlyData().stream().map(MonthlyData::getPrecipitation).collect(Collectors.toList()));
+
+        mdtro.filterByDate(startDate, endDate);
+
         return mdtro;
     }
 }

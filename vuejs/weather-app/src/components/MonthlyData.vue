@@ -20,7 +20,8 @@
                                     <label>From</label>
                                     <div class="two fields">
                                         <div class="field">
-                                            <select name="year" class="ui dropdown" id="select-year-start" v-model="selectedYearStart">
+                                            <select name="year" class="ui dropdown" id="select-year-start"
+                                                v-model="selectedYearStart">
                                                 <option v-for="year in availableYears" :value="year">{{ year }}</option>
                                             </select>
                                         </div>
@@ -37,7 +38,8 @@
                                     <label>To</label>
                                     <div class="two fields">
                                         <div class="field">
-                                            <select name="year" class="ui dropdown" id="select-year-end" v-model="selectedYearEnd">
+                                            <select name="year" class="ui dropdown" id="select-year-end"
+                                                v-model="selectedYearEnd">
                                                 <option v-for="year in availableYears" :value="year">{{ year }}</option>
                                             </select>
                                         </div>
@@ -53,6 +55,9 @@
                             </div>
                         </div>
                     </SuiCard>
+
+                    <div>Start: {{ dateStart.toISOString() }}</div>
+                    <div>End: {{ dateEnd.toISOString() }}</div>
                 </div>
             </div>
             <div class="row">
@@ -86,6 +91,7 @@ import { Message } from '../utils/Message';
 import { mapState } from 'vuex';
 import SuiCard from "./SuiCard.vue";
 import moment from 'moment';
+import dateUtils from '../utils/DateUtils';
 
 export default {
     name: "MonthlyData",
@@ -98,12 +104,10 @@ export default {
             loading: false,
             monthlyDataPlotId: "monthly-data-plot-id",
             selectedLocationsId: "",
-            startDate: "2061-01-01",
-            endDate: "2023-01-01",
             selectedYearStart: 1961,
-            selectedMonthStart: 1,
+            selectedMonthStart: 0,
             selectedYearEnd: 2023,
-            selectedMonthEnd: 1
+            selectedMonthEnd: 0
         }
     },
     computed: {
@@ -121,9 +125,15 @@ export default {
             for (let i = 0; i < 12; i++) {
                 const monthString = moment().month(i).format('MMMM');
                 console.log(monthString);
-                months.push({ name: monthString, value: i + 1 });
+                months.push({ name: monthString, value: i });
             }
             return months;
+        },
+        dateStart() {
+            return dateUtils.getDateMonthYear(this.selectedYearStart, this.selectedMonthStart);
+        },
+        dateEnd() {
+            return dateUtils.getDateMonthYear(this.selectedYearEnd, this.selectedMonthEnd);
         }
     },
     mounted() {
@@ -155,14 +165,16 @@ export default {
                 return;
             }
             try {
-                const start = new Date(this.startDate);
-                const end = new Date(this.endDate);
+                const start = new Date(this.dateStart);
+                const end = new Date(this.dateEnd);
 
                 console.log(start);
                 console.log(end);
 
                 this.setLoading();
-                const result = await axios.get(`http://localhost:8080/api/monthly/${this.selectedLocationsId}`);
+                const sd = dateUtils.dateToString(start);
+                const ed = dateUtils.dateToString(end);
+                const result = await axios.get(`http://localhost:8080/api/monthly/${this.selectedLocationsId}?startDate=${sd}&endDate=${ed}`);
 
                 if (result.status == 200) {
                     this.monthlyData = result.data;
@@ -205,4 +217,5 @@ export default {
 <style scoped>
 .my-loader {
     min-height: 100px;
-}</style>
+}
+</style>
