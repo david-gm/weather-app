@@ -38,10 +38,10 @@
         </div>
     </div>
 
-    <div class="ui modal" id="location-map-modal">
+    <div class="ui modal mini" id="location-map-modal">
         <i class="close icon"></i>
-        <div class="header">
-            Modal Title
+        <div class="content">
+            Do you want to add the location?
         </div>
         <div class="actions">
             <div class="ui cancel button">Cancel</div>
@@ -124,7 +124,6 @@ export default {
             this.map.fitBounds(group.getBounds().pad(0.5));
         },
         onNewAddressSearch(address) {
-            console.log(address)
             if (address == null) {
                 Message.info('Location not found');
                 return;
@@ -154,7 +153,7 @@ export default {
             let that = this;
             $('.ui.modal')
                 .modal({
-                    inverted: true,
+                    //inverted: true,
                     closable: false,
                     onDeny: function () {
                         return true;

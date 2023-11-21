@@ -1,4 +1,19 @@
-import moment from "moment/moment"
+import moment from 'moment/moment'
+
+const mapMonths = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec'
+]
 
 export default {
   getDateMonthYear(year, month) {
@@ -13,11 +28,18 @@ export default {
   },
 
   /**
-   * 
-   * @param {Date} date 
+   *
+   * @param {Date} date
    */
   dateToString(date) {
-    console.log(date)
     return moment(date).format('YYYY-MM-DD')
+  },
+
+  listOfMonthsToStrings(months) {
+    let monthAsStrings = []
+    for(let m of months) {
+      monthAsStrings.push(mapMonths[m-1])
+    }
+    return monthAsStrings
   }
 }

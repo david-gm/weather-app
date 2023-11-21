@@ -4,13 +4,6 @@ import MonthlyData from '../components/MonthlyData.vue';
 
 <template>
   <div class="ui container-margin container">
-    <h2 class="ui header">Data</h2>
-    <div class="ui three column grid">
-      <div class="column">
-      </div>
-      <div class="column"></div>
-      <div class="column"></div>
-    </div>
     <MonthlyData></MonthlyData>
   </div>
 </template>
