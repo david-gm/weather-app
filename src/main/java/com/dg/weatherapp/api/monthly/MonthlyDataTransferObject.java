@@ -1,14 +1,15 @@
 package com.dg.weatherapp.api.monthly;
 
 import com.dg.weatherapp.api.location.Location;
+import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
+import com.dg.weatherapp.api.monthly.DataDescriptorMonths;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 @Setter
 @Getter
@@ -18,6 +19,7 @@ public class MonthlyDataTransferObject {
     private List<Double> temperature;
     private List<Double> precipitation;
     private List<LocalDateTime> datetime;
+    private HashMap<Integer, DataDescriptorMonths> temperatureByMonth; // <year, <monthly temp as list>>
 
     public void filterByDate(LocalDate startDate, LocalDate endDate) {
         if (startDate == null && endDate == null)
@@ -42,6 +44,29 @@ public class MonthlyDataTransferObject {
         datetime = newDatetime;
         temperature = newTemperature;
         precipitation = newPrecipitation;
+    }
+
+    public void addDataByMonth() {
+        temperatureByMonth = new HashMap<>();
+
+        Set <Integer> uniqueYears = new HashSet<>();
+        for (LocalDateTime localDateTime : datetime) {
+            uniqueYears.add(localDateTime.getYear());
+        }
+
+        for(Integer uniqueYear : uniqueYears) {
+            DataDescriptorMonths ddm = new DataDescriptorMonths();
+
+            for(int i = 0; i < datetime.size(); i++) {
+                LocalDateTime dt = datetime.get(i);
+                if(dt.getYear() == uniqueYear) {
+                    ddm.getMonths().add(dt.getMonthValue());
+                    ddm.getData().add(temperature.get(i));
+                }
+            }
+
+            temperatureByMonth.put(uniqueYear, ddm);
+        }
     }
 
     private boolean checkStartDate(LocalDateTime date, LocalDate startDate) {

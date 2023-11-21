@@ -125,8 +125,8 @@ public class WeatherAppService {
         return monthly;
     }
 
-    public Optional<Monthly> getMonthlyById(Long id) {
-        return monthlyRepository.findById(id);
+    public Optional<Monthly> getMonthlyById(Long locationId) {
+        return monthlyRepository.findByLocationId(locationId);
     }
 
     public MonthlyDataTransferObject mapMonthly(Monthly monthly, LocalDate startDate, LocalDate endDate) {
@@ -139,6 +139,7 @@ public class WeatherAppService {
         mdtro.setPrecipitation(monthly.getMonthlyData().stream().map(MonthlyData::getPrecipitation).collect(Collectors.toList()));
 
         mdtro.filterByDate(startDate, endDate);
+        mdtro.addDataByMonth();
 
         return mdtro;
     }
