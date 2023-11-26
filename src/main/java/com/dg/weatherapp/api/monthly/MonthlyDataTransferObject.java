@@ -1,18 +1,19 @@
 package com.dg.weatherapp.api.monthly;
 
 import com.dg.weatherapp.api.location.Location;
-import lombok.Data;
+import com.dg.weatherapp.api.util.Statistics;
 import lombok.Getter;
 import lombok.Setter;
-
-import com.dg.weatherapp.api.monthly.DataDescriptorMonths;
+import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Setter
 @Getter
+@Slf4j
 public class MonthlyDataTransferObject {
     private Long id;
     private Location location;
@@ -20,6 +21,7 @@ public class MonthlyDataTransferObject {
     private List<Double> precipitation;
     private List<LocalDateTime> datetime;
     private HashMap<Integer, DataDescriptorMonths> temperatureByMonth; // <year, <monthly temp as list>>
+    private HashMap<Integer, MonthlyStatistics> temperatureByMonthStatistics; // <month, statistics>
 
     public void filterByDate(LocalDate startDate, LocalDate endDate) {
         if (startDate == null && endDate == null)
@@ -46,26 +48,57 @@ public class MonthlyDataTransferObject {
         precipitation = newPrecipitation;
     }
 
-    public void addDataByMonth() {
+    public void addAdditionalData() {
+        addDataByMonth();
+        addMonthStatistics();
+    }
+
+    private void addDataByMonth() {
         temperatureByMonth = new HashMap<>();
 
-        Set <Integer> uniqueYears = new HashSet<>();
+        Set<Integer> uniqueYears = new HashSet<>();
         for (LocalDateTime localDateTime : datetime) {
             uniqueYears.add(localDateTime.getYear());
         }
 
-        for(Integer uniqueYear : uniqueYears) {
+        for (Integer uniqueYear : uniqueYears) {
             DataDescriptorMonths ddm = new DataDescriptorMonths();
 
-            for(int i = 0; i < datetime.size(); i++) {
+            for (int i = 0; i < datetime.size(); i++) {
                 LocalDateTime dt = datetime.get(i);
-                if(dt.getYear() == uniqueYear) {
+                if (dt.getYear() == uniqueYear) {
                     ddm.getMonths().add(dt.getMonthValue());
                     ddm.getData().add(temperature.get(i));
                 }
             }
 
             temperatureByMonth.put(uniqueYear, ddm);
+        }
+    }
+
+    private void addMonthStatistics() {
+        temperatureByMonthStatistics = new HashMap<Integer, MonthlyStatistics>();
+        List<Integer> months = getMonthsFromDateTimes();
+        for (Integer month : months) {
+            MonthlyStatistics ms = new MonthlyStatistics(month);
+            ArrayList<Double> dataSortedByMonth = new ArrayList<>();
+            log.debug("Current Month: " + month);
+            for (int i = 0; i < datetime.size(); i++) {
+                if (datetime.get(i).getMonthValue() != month)
+                    continue;
+                dataSortedByMonth.add(temperature.get(i));
+                ms.getDatetime().add(datetime.get(i));
+            }
+            ms.setMean(Statistics.computeMean(dataSortedByMonth));
+            ms.setStandardDeviation(Statistics.computeStd(dataSortedByMonth));
+
+            List<Double> deviation = dataSortedByMonth.stream().map(value -> {
+                if (value == null)
+                    return null;
+                return value - ms.getMean();
+            }).collect(Collectors.toList());
+            ms.setDeviationFromMean(deviation);
+            temperatureByMonthStatistics.put(month, ms);
         }
     }
 
@@ -91,5 +124,13 @@ public class MonthlyDataTransferObject {
         newDatetime.add(datetime.get(index));
         newTemperature.add(temperature.get(index));
         newPrecipitation.add(precipitation.get(index));
+    }
+
+    private List<Integer> getMonthsFromDateTimes() {
+        Set<Integer> months = new HashSet<>();
+        for (LocalDateTime dt : datetime) {
+            months.add(dt.getMonthValue());
+        }
+        return months.stream().toList();
     }
 }

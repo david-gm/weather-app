@@ -139,7 +139,7 @@ public class WeatherAppService {
         mdtro.setPrecipitation(monthly.getMonthlyData().stream().map(MonthlyData::getPrecipitation).collect(Collectors.toList()));
 
         mdtro.filterByDate(startDate, endDate);
-        mdtro.addDataByMonth();
+        mdtro.addAdditionalData();
 
         return mdtro;
     }
