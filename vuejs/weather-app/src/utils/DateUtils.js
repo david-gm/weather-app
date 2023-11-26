@@ -30,16 +30,31 @@ export default {
   /**
    *
    * @param {Date} date
+   * @returns
    */
   dateToString(date) {
     return moment(date).format('YYYY-MM-DD')
   },
 
+  /**
+   * 
+   * @param {Array} months 
+   * @returns 
+   */
   listOfMonthsToStrings(months) {
     let monthAsStrings = []
     for(let m of months) {
       monthAsStrings.push(mapMonths[m-1])
     }
     return monthAsStrings
+  },
+
+  /**
+   * 
+   * @param {Number} month
+   * @returns
+   */
+  monthToString(month) {
+    return mapMonths[month-1]
   }
 }

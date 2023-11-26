@@ -88,12 +88,20 @@
                     <div class="ui top attached tabular menu">
                         <div class="active item" data-tab="monthly" @click="onClickMenu1">Monthly</div>
                         <div class="item" data-tab="monthlyByYear" @click="onClickMenu2">Monthly sorted by Year</div>
+                        <div class="item" data-tab="monthlyByYearStatistics" @click="onClickMenu3">Monthly Statistics</div>
+                        <div class="item" data-tab="monthlyByYearHistogram" @click="onClickMenu4">Monthly Histogram</div>
                     </div>
                     <div class="ui bottom attached active tab segment" data-tab="monthly">
                         <div class="plot" :id="monthlyDataPlotId"></div>
                     </div>
                     <div class="ui bottom attached tab segment" data-tab="monthlyByYear">
                         <div class="plot" :id="monthlyDataPlotId2"></div>
+                    </div>
+                    <div class="ui bottom attached tab segment" data-tab="monthlyByYearStatistics">
+                        <div class="plot" :id="monthlyDataPlotId3"></div>
+                    </div>
+                    <div class="ui bottom attached tab segment" data-tab="monthlyByYearHistogram">
+                        <div class="plot" :id="monthlyDataPlotId4"></div>
                     </div>
                 </div>
             </div>
@@ -121,6 +129,8 @@ export default {
             loading: false,
             monthlyDataPlotId: "monthly-data-plot-id",
             monthlyDataPlotId2: "monthly-data-plot-id2",
+            monthlyDataPlotId3: "monthly-data-plot-id3",
+            monthlyDataPlotId4: "monthly-data-plot-id4",
             selectedLocationsId: "",
             activeYearStart: false,
             selectedYearStart: 1961,
@@ -209,6 +219,8 @@ export default {
                     await this.$nextTick();
                     this.plotData();
                     this.plotDataByMonth();
+                    this.plotDataByMonthStatistics();
+                    this.plotDataByMonthHistogram();
                 }
                 else {
                     Message.error(`Request failed: Status code: ${result.status}`);
@@ -250,6 +262,89 @@ export default {
 
             Plotly.newPlot(this.monthlyDataPlotId2, traces, layout, { responsive: true });
         },
+        plotDataByMonthStatistics() {
+            let traces = [];
+            let annotations = [];
+            let shapes = [];
+            let numTraces = 1;
+            for (const [month, values] of Object.entries(this.monthlyData.temperatureByMonthStatistics)) {
+                traces.push({
+                    x: values.datetime,
+                    y: values.deviationFromMean,
+                    xaxis: `x${numTraces}`,
+                    yaxis: `y${numTraces}`,
+                    type: 'scatter',
+                    name: dateUtils.monthToString(values.month)
+                });
+
+                // std
+                shapes.push({
+                    xref: `x${numTraces}`,
+                    yref: `y${numTraces}`,
+                    type: 'rect',
+                    fillcolor: 'green',
+                    opacity: 0.3,
+                    line: {
+                        width: 0
+                    },
+                    x0: values.datetime[0],
+                    x1: values.datetime[values.datetime.length - 1],
+                    y0: -values.standardDeviation,
+                    y1: values.standardDeviation
+                });
+
+                annotations.push({
+                    xref: `x${numTraces}`,
+                    yref: `y${numTraces}`,
+                    x: values.datetime[0],
+                    y: values.deviationFromMean[0],
+                    yanchor: 'bottom',
+                    text: `&mu;: ${values.mean.toPrecision(2)} °C,<br>&#963;: ${values.standardDeviation.toPrecision(1)} °C`,
+                    showarrow: false,
+                    align: 'center',
+                    bgcolor: '#ffffff',
+                    opacity: 0.8,
+                    borderpad: 5,
+                });
+                numTraces++;
+            }
+
+            const layout = {
+                grid: {
+                    rows: Math.ceil(traces.length / 2), columns: 2, pattern: 'independent',
+                },
+                height: 1000,
+                title: 'Deviation from mean',
+                shapes: shapes,
+                annotations: annotations
+            };
+
+            Plotly.newPlot(this.monthlyDataPlotId3, traces, layout, { responsive: true });
+        },
+        plotDataByMonthHistogram() {
+            let traces = [];
+            let numTraces = 1;
+            for (const [month, values] of Object.entries(this.monthlyData.temperatureByMonthStatistics)) {
+                traces.push({
+                    x: values.data,
+                    xaxis: `x${numTraces}`,
+                    yaxis: `y${numTraces}`,
+                    type: 'histogram',
+                    histnorm: 'probability',
+                    name: dateUtils.monthToString(values.month)
+                });
+                numTraces++;
+            }
+            const layout = {
+                grid: {
+                    rows: Math.ceil(traces.length / 2), columns: 2, pattern: 'independent',
+                },
+                height: 1000,
+                title: 'Histogram of tempertures',
+            };
+
+            Plotly.newPlot(this.monthlyDataPlotId4, traces, layout, { responsive: true });
+        },
         setLoading() {
             this.loading = true;
         },
@@ -261,6 +356,12 @@ export default {
         },
         onClickMenu2() {
             Plotly.Plots.resize(this.monthlyDataPlotId2);
+        },
+        onClickMenu3() {
+            Plotly.Plots.resize(this.monthlyDataPlotId3);
+        },
+        onClickMenu4() {
+            Plotly.Plots.resize(this.monthlyDataPlotId4);
         }
     }
 }

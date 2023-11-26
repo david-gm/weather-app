@@ -82,13 +82,13 @@ public class MonthlyDataTransferObject {
         for (Integer month : months) {
             MonthlyStatistics ms = new MonthlyStatistics(month);
             ArrayList<Double> dataSortedByMonth = new ArrayList<>();
-            log.debug("Current Month: " + month);
             for (int i = 0; i < datetime.size(); i++) {
                 if (datetime.get(i).getMonthValue() != month)
                     continue;
                 dataSortedByMonth.add(temperature.get(i));
                 ms.getDatetime().add(datetime.get(i));
             }
+            ms.setData(dataSortedByMonth);
             ms.setMean(Statistics.computeMean(dataSortedByMonth));
             ms.setStandardDeviation(Statistics.computeStd(dataSortedByMonth));
 
