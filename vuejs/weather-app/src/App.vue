@@ -17,6 +17,9 @@ export default {
       if(to.path == "/data") {
         await this.$store.dispatch('fetchLocations');
       }
+      if(to.path == "/comparing") {
+        await this.$store.dispatch('fetchLocations');
+      }
     }
   }
 }
@@ -25,8 +28,8 @@ export default {
 <template>
   <div class="ui visible inverted left vertical sidebar menu">
     <RouterLink class="item" to="/">Map</RouterLink>
-    <RouterLink class="item" to="/data">Data</RouterLink>
-    <RouterLink class="item" to="/about">About</RouterLink>
+    <RouterLink class="item" to="/data">Monthly Data</RouterLink>
+    <RouterLink class="item" to="/comparing">Comparing</RouterLink>
   </div>
   <div class="pusher fix-sidebar-padding">
     <RouterView />
